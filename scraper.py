@@ -110,6 +110,8 @@ for page in range(1, PAGES_TO_VISIT + 1):
             objLikes = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'span#ad-bookmarks-count'))).text
             objLikes = int(objLikes)
 
+            objDescription = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'div.description.without-web'))).text
+
             allObjects.loc[rowCounter] = None
 
             allObjects.loc[rowCounter, 'id'] = objID
