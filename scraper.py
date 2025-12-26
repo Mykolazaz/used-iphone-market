@@ -14,12 +14,13 @@ import time
 
 
 TIMEOUT = 10
+
 MAIN_PAGE = 'https://www.skelbiu.lt/skelbimai/?keywords=iphone&autocompleted=1&search=1&distance=0&mainCity=1&category_id=480&user_type=0&ad_since_max=0&detailsSearch=0&type=1&facets=1&facets=0'
 
-cService = webdriver.ChromeService(executable_path='./webdriver/mac-arm64/chromedriver')
+cService = webdriver.ChromeService(executable_path='./webdriver/linux/chromedriver')
 driver = webdriver.Chrome(service=cService)
 
-driver.set_window_size(1280, 720)
+driver.set_window_size(1920, 1080)
 driver.get(MAIN_PAGE)
 
 wait = WebDriverWait(driver, timeout=TIMEOUT)
@@ -69,6 +70,8 @@ columns = ['id',
             'views',
             'likes',
             'description',
+            'sold',
+            'sale_time',
             'last_update',
             'registration_date',
             'n_listings']
@@ -107,42 +110,54 @@ for page in range(1, PAGES_TO_VISIT + 1):
         objViews = None
         objLikes = None
         objDescription = None
+        objSold = False
+        objSaleTime = None
         objSellerDate = None
         objSellerAds = None
         objLastUpdate = None
 
         wait.until(lambda d: d.execute_script("return document.readyState") == "complete")
 
-        if len(driver.find_elements(By.CSS_SELECTOR, 'div.info-title')) == 0:
+        itemAvailable = True if len(driver.find_elements(By.CSS_SELECTOR, 'div.info-title')) == 0 else False
 
-            objID = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'div.actions-container > div.block:nth-child(1)'))).text
-            objID = re.search(r'\d{8}', objID).group()
-            objID = int(objID)
+        objID = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'div.actions-container > div.block:nth-child(1)'))).text
+        objID = re.search(r'\d{8}', objID).group()
+        objID = int(objID)
 
-            objURL = url
+        objURL = url
 
-            objName = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'div.left-block > h1'))).text
+        objName = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'div.left-block > h1'))).text
+        
+        if len(driver.find_elements(By.CSS_SELECTOR, 'div.right-block > p')) != 0:
             
-            objPrice = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'div.right-block > p'))).text
+            objPrice = driver.find_element(By.CSS_SELECTOR, 'div.right-block > p').text
             objPrice = objPrice.translate(replacements)
             objPrice = int(objPrice)
 
-            objMaker = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'div.details-row:nth-child(1) > span'))).text
+        objMaker = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'div.details-row:nth-child(1) > span'))).text
 
-            objModel = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'div.details-row:nth-child(2) > span'))).text
+        objModel = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'div.details-row:nth-child(2) > span'))).text
 
-            objCondition = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'div.details-row:nth-child(3) > span'))).text
+        objCondition = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'div.details-row:nth-child(3) > span'))).text
 
+        if itemAvailable:
             objCity = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'span.main-city'))).text
 
-            objViews = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'div.block.showed > span'))).text
-            objViews = objViews.replace('K', '000')
-            objViews = int(objViews)
+        objViews = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'div.block.showed > span'))).text
+        objViews = objViews.replace('K', '000')
+        objViews = int(objViews)
 
-            objLikes = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'span#ad-bookmarks-count'))).text
-            objLikes = int(objLikes)
+        objLikes = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'span#ad-bookmarks-count'))).text
+        objLikes = int(objLikes)
 
-            objDescription = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'div.description.without-web'))).text
+        objDescription = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'div.description.without-web'))).text
+
+        if not itemAvailable:
+            objSold = True
+
+            objSaleTime = driver.find_element(By.CSS_SELECTOR, 'div.disabled-info-container > div.info-description').text
+
+        if itemAvailable:
 
             objSellerDate = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'div.registration-date'))).text
 
@@ -158,48 +173,52 @@ for page in range(1, PAGES_TO_VISIT + 1):
             objSellerAds = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'div.profile-stats'))).text
             objSellerAds = re.search(r'\d+', objSellerAds).group()
 
-            objLastUpdate = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'div.actions-container > div.block:nth-child(2)'))).text
+        objLastUpdate = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'div.actions-container > div.block:nth-child(2)'))).text
 
-            wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'div.main-photo.js-open-photo'))).click()
+        if itemAvailable:
+            if len(driver.find_elements(By.CSS_SELECTOR, 'div.main-photo > img.no-photo')) == 0:
 
-            time.sleep(0.5)
+                wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'div.main-photo.js-open-photo'))).click()
 
-            images = driver.find_elements(By.CSS_SELECTOR, 'img.pswp__img')
-            image_urls = [img.get_attribute('src') for img in images]
+                time.sleep(0.5)
 
-            next_button = driver.find_element(By.CSS_SELECTOR, 'button.pswp__button.pswp__button--arrow--right')
+                images = driver.find_elements(By.CSS_SELECTOR, 'img.pswp__img')
+                image_urls = [img.get_attribute('src') for img in images]
 
-            for index, img_url in enumerate(image_urls):
-                response = requests.get(img_url, stream=True)
+                next_button = driver.find_element(By.CSS_SELECTOR, 'button.pswp__button.pswp__button--arrow--right')
 
-                try:
-                    next_button.click()
-                except:
-                    None
+                for index, img_url in enumerate(image_urls):
+                    response = requests.get(img_url, stream=True)
 
-                with open(f'./images/{objID}-{index}.png', 'wb') as f:
-                    for chunk in response.iter_content(chunk_size=8192):
-                        f.write(chunk)
+                    try:
+                        next_button.click()
+                    except:
+                        None
 
-            allObjects.loc[rowCounter] = None
+                    with open(f'./images/{objID}-{index}.png', 'wb') as f:
+                        for chunk in response.iter_content(chunk_size=8192):
+                            f.write(chunk)
 
-            allObjects.loc[rowCounter, 'id'] = objID
-            allObjects.loc[rowCounter, 'url'] = objURL
-            allObjects.loc[rowCounter, 'name'] = objName
-            allObjects.loc[rowCounter, 'price'] = objPrice
-            allObjects.loc[rowCounter, 'maker'] = objMaker
-            allObjects.loc[rowCounter, 'model'] = objModel
-            allObjects.loc[rowCounter, 'condition'] = objCondition
-            allObjects.loc[rowCounter, 'city'] = objCity
-            allObjects.loc[rowCounter, 'views'] = objViews
-            allObjects.loc[rowCounter, 'likes'] = objLikes
-            allObjects.loc[rowCounter, 'description'] = objDescription
-            allObjects.loc[rowCounter, 'last_update'] = objLastUpdate
-            allObjects.loc[rowCounter, 'registration_date'] = objSellerDate
-            allObjects.loc[rowCounter, 'n_listings'] = objSellerAds
-            
+        allObjects.loc[rowCounter] = None
 
-            rowCounter += 1
+        allObjects.loc[rowCounter, 'id'] = objID
+        allObjects.loc[rowCounter, 'url'] = objURL
+        allObjects.loc[rowCounter, 'name'] = objName
+        allObjects.loc[rowCounter, 'price'] = objPrice
+        allObjects.loc[rowCounter, 'maker'] = objMaker
+        allObjects.loc[rowCounter, 'model'] = objModel
+        allObjects.loc[rowCounter, 'condition'] = objCondition
+        allObjects.loc[rowCounter, 'city'] = objCity
+        allObjects.loc[rowCounter, 'views'] = objViews
+        allObjects.loc[rowCounter, 'likes'] = objLikes
+        allObjects.loc[rowCounter, 'description'] = objDescription
+        allObjects.loc[rowCounter, 'sold'] = objSold
+        allObjects.loc[rowCounter, 'sale_time'] = objSaleTime
+        allObjects.loc[rowCounter, 'last_update'] = objLastUpdate
+        allObjects.loc[rowCounter, 'registration_date'] = objSellerDate
+        allObjects.loc[rowCounter, 'n_listings'] = objSellerAds
+        
+        rowCounter += 1
 
         driver.back()
 
