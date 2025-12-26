@@ -2,6 +2,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import StaleElementReferenceException
 
 import requests
 
@@ -51,7 +52,8 @@ LISTINGS_TO_VISIT = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR
 replacements = str.maketrans({'(':'',
                               ')':'',
                               ' ':'',
-                              '€':''})
+                              '€':'',
+                              ',':'.'})
 
 LISTINGS_TO_VISIT = LISTINGS_TO_VISIT.translate(replacements)
 
@@ -114,6 +116,7 @@ for page in range(1, PAGES_TO_VISIT + 1):
         objSaleTime = None
         objSellerDate = None
         objSellerAds = None
+        objSellerVerified = None
         objLastUpdate = None
 
         wait.until(lambda d: d.execute_script("return document.readyState") == "complete")
@@ -132,7 +135,7 @@ for page in range(1, PAGES_TO_VISIT + 1):
             
             objPrice = driver.find_element(By.CSS_SELECTOR, 'div.right-block > p').text
             objPrice = objPrice.translate(replacements)
-            objPrice = int(objPrice)
+            objPrice = float(objPrice)
 
         objMaker = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'div.details-row:nth-child(1) > span'))).text
 
@@ -150,7 +153,10 @@ for page in range(1, PAGES_TO_VISIT + 1):
         objLikes = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'span#ad-bookmarks-count'))).text
         objLikes = int(objLikes)
 
-        objDescription = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'div.description.without-web'))).text
+
+        if len(driver.find_elements(By.CSS_SELECTOR, 'div.description.without-web')) != 0:
+            objDescription = driver.find_element(By.CSS_SELECTOR, 'div.description.without-web').text
+
 
         if not itemAvailable:
             objSold = True
@@ -170,8 +176,11 @@ for page in range(1, PAGES_TO_VISIT + 1):
 
             objSellerDate = datetime.strptime(objSellerDate, "%Y %m")
 
-            objSellerAds = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'div.profile-stats'))).text
-            objSellerAds = re.search(r'\d+', objSellerAds).group()
+            if len(driver.find_elements(By.CSS_SELECTOR, 'div.profile-stats')) != 0:
+                objSellerAds = driver.find_element(By.CSS_SELECTOR, 'div.profile-stats').text
+                objSellerAds = re.search(r'\d+', objSellerAds).group()
+
+            objSellerVerified = True if len(driver.find_elements(By.CSS_SELECTOR, 'div.user-verified > span.tooltip')) != 0 else False
 
         objLastUpdate = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'div.actions-container > div.block:nth-child(2)'))).text
 
@@ -182,8 +191,17 @@ for page in range(1, PAGES_TO_VISIT + 1):
 
                 time.sleep(0.5)
 
-                images = driver.find_elements(By.CSS_SELECTOR, 'img.pswp__img')
-                image_urls = [img.get_attribute('src') for img in images]
+                image_urls = []
+
+                for _ in range(3):
+                    try:
+                        images = driver.find_elements(By.CSS_SELECTOR, 'img.pswp__img')
+                        image_urls = [img.get_attribute('src') for img in images]
+                        break
+                    
+                    except StaleElementReferenceException:
+                        time.sleep(1)
+                        continue
 
                 next_button = driver.find_element(By.CSS_SELECTOR, 'button.pswp__button.pswp__button--arrow--right')
 
@@ -216,6 +234,7 @@ for page in range(1, PAGES_TO_VISIT + 1):
         allObjects.loc[rowCounter, 'sale_time'] = objSaleTime
         allObjects.loc[rowCounter, 'last_update'] = objLastUpdate
         allObjects.loc[rowCounter, 'registration_date'] = objSellerDate
+        allObjects.loc[rowCounter, 'seller_verified'] = objSellerVerified
         allObjects.loc[rowCounter, 'n_listings'] = objSellerAds
         
         rowCounter += 1
@@ -227,6 +246,8 @@ for page in range(1, PAGES_TO_VISIT + 1):
     nextPage = f'https://www.skelbiu.lt/skelbimai/{page+1}{MAIN_PAGE[33:]}'
     driver.get(nextPage)
     wait.until(lambda d: d.execute_script("return document.readyState") == "complete")
+
+    print(f'Current page number: {page}')
 
 driver.quit()
 
