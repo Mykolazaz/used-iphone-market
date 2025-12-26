@@ -2,10 +2,15 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+
+import requests
+
 import regex as re
 import pandas as pd
 
 from datetime import datetime
+
+import time
 
 
 TIMEOUT = 10
@@ -155,6 +160,26 @@ for page in range(1, PAGES_TO_VISIT + 1):
 
             objLastUpdate = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'div.actions-container > div.block:nth-child(2)'))).text
 
+            wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'div.main-photo.js-open-photo'))).click()
+
+            time.sleep(0.5)
+
+            images = driver.find_elements(By.CSS_SELECTOR, 'img.pswp__img')
+            image_urls = [img.get_attribute('src') for img in images]
+
+            next_button = driver.find_element(By.CSS_SELECTOR, 'button.pswp__button.pswp__button--arrow--right')
+
+            for index, img_url in enumerate(image_urls):
+                response = requests.get(img_url, stream=True)
+
+                try:
+                    next_button.click()
+                except:
+                    None
+
+                with open(f'./images/{objID}-{index}.png', 'wb') as f:
+                    for chunk in response.iter_content(chunk_size=8192):
+                        f.write(chunk)
 
             allObjects.loc[rowCounter] = None
 
