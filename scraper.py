@@ -36,15 +36,16 @@ LISTINGS_TO_VISIT = int(LISTINGS_TO_VISIT)
 
 PAGES_TO_VISIT = LISTINGS_TO_VISIT // 24
 
-columns = ['objName',
-            'objPrice',
-            'objMaker',
-            'objModel',
-            'objCondition',
-            'objCity',
-            'objViews',
-            'objLikes',
-            'objDescription']
+columns = ['id',
+            'name',
+            'price',
+            'maker',
+            'model',
+            'condition',
+            'city',
+            'views',
+            'likes',
+            'description']
 
 allObjects = pd.DataFrame(columns=columns)
 
@@ -69,6 +70,7 @@ for page in range(1, PAGES_TO_VISIT + 1):
     for i, url in enumerate(pageListingLinks):
         driver.get(url)
 
+        objID = None
         objName = None
         objPrice = None
         objMaker = None
@@ -81,7 +83,11 @@ for page in range(1, PAGES_TO_VISIT + 1):
 
         wait.until(lambda d: d.execute_script("return document.readyState") == "complete")
 
-        if len(driver.find_elements(By.CLASS_NAME, 'div.info-title')) > 0:
+        if len(driver.find_elements(By.CSS_SELECTOR, 'div.info-title')) == 0:
+
+            objID = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'div.image-item-id'))).text
+            objID = objID.replace('ID: ', '')
+            objID = int(objID)
 
             objName = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'div.left-block > h1'))).text
             
@@ -98,6 +104,7 @@ for page in range(1, PAGES_TO_VISIT + 1):
             objCity = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'span.main-city'))).text
 
             objViews = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'div.block.showed > span'))).text
+            objViews = objViews.replace('K', '000')
             objViews = int(objViews)
 
             objLikes = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'span#ad-bookmarks-count'))).text
@@ -105,6 +112,7 @@ for page in range(1, PAGES_TO_VISIT + 1):
 
             allObjects.loc[rowCounter] = None
 
+            allObjects.loc[rowCounter, 'id'] = objID
             allObjects.loc[rowCounter, 'name'] = objName
             allObjects.loc[rowCounter, 'price'] = objPrice
             allObjects.loc[rowCounter, 'maker'] = objMaker
@@ -113,6 +121,7 @@ for page in range(1, PAGES_TO_VISIT + 1):
             allObjects.loc[rowCounter, 'city'] = objCity
             allObjects.loc[rowCounter, 'views'] = objViews
             allObjects.loc[rowCounter, 'likes'] = objLikes
+            allObjects.loc[rowCounter, 'description'] = objDescription
             rowCounter += 1
 
         driver.back()
