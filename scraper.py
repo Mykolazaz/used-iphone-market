@@ -141,7 +141,8 @@ for page in range(1, PAGES_TO_VISIT + 1):
 
         objModel = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'div.details-row:nth-child(2) > span'))).text
 
-        objCondition = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'div.details-row:nth-child(3) > span'))).text
+        if len(driver.find_elements(By.CSS_SELECTOR, 'div.details-row:nth-child(3) > span')) != 0:
+            objCondition = driver.find_element(By.CSS_SELECTOR, 'div.details-row:nth-child(3) > span').text
 
         if itemAvailable:
             objCity = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'span.main-city'))).text
