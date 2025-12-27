@@ -18,7 +18,7 @@ TIMEOUT = 10
 
 MAIN_PAGE = 'https://www.skelbiu.lt/skelbimai/?keywords=iphone&autocompleted=1&search=1&distance=0&mainCity=1&category_id=480&user_type=0&ad_since_max=0&detailsSearch=0&type=1&facets=1&facets=0'
 
-cService = webdriver.ChromeService(executable_path='./webdriver/mac-arm64/chromedriver')
+cService = webdriver.ChromeService(executable_path='./webdriver/linux/chromedriver')
 driver = webdriver.Chrome(service=cService)
 
 driver.set_window_size(1920, 1080)
@@ -251,7 +251,6 @@ for page in range(1, PAGES_TO_VISIT + 1):
 
         wait.until(lambda d: d.execute_script("return document.readyState") == "complete")
 
-    break
     nextPage = f'https://www.skelbiu.lt/skelbimai/{page+1}{MAIN_PAGE[33:]}'
     driver.get(nextPage)
     wait.until(lambda d: d.execute_script("return document.readyState") == "complete")
@@ -260,4 +259,4 @@ for page in range(1, PAGES_TO_VISIT + 1):
 
 driver.quit()
 
-allObjects.to_csv('./objects.csv', index=False)
+allObjects.to_csv('./iphones.csv', index=False)
