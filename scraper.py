@@ -18,7 +18,7 @@ TIMEOUT = 10
 
 MAIN_PAGE = 'https://www.skelbiu.lt/skelbimai/?keywords=iphone&autocompleted=1&search=1&distance=0&mainCity=1&category_id=480&user_type=0&ad_since_max=0&detailsSearch=0&type=1&facets=1&facets=0'
 
-cService = webdriver.ChromeService(executable_path='./webdriver/linux/chromedriver')
+cService = webdriver.ChromeService(executable_path='./webdriver/mac-arm64/chromedriver')
 driver = webdriver.Chrome(service=cService)
 
 driver.set_window_size(1920, 1080)
@@ -62,16 +62,17 @@ LISTINGS_TO_VISIT = int(LISTINGS_TO_VISIT)
 PAGES_TO_VISIT = LISTINGS_TO_VISIT // 24
 
 columns = ['id',
-           'url',
             'name',
-            'price',
             'maker',
             'model',
             'condition',
+            'price',
             'city',
             'views',
             'likes',
             'description',
+            'url',
+            'stars',
             'sold',
             'sale_time',
             'last_update',
@@ -112,6 +113,7 @@ for page in range(1, PAGES_TO_VISIT + 1):
         objViews = None
         objLikes = None
         objDescription = None
+        objStars = 0
         objSold = False
         objSaleTime = None
         objSellerDate = None
@@ -123,9 +125,13 @@ for page in range(1, PAGES_TO_VISIT + 1):
 
         itemAvailable = True if len(driver.find_elements(By.CSS_SELECTOR, 'div.info-title')) == 0 else False
 
-        objID = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'div.actions-container > div.block:nth-child(1)'))).text
-        objID = re.search(r'\d{8}', objID).group()
+        objStarsID = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'div.actions-container > div.block:nth-child(1)'))).text
+        objID = re.search(r'\d{8}', objStarsID).group()
         objID = int(objID)
+
+        objStars = re.search(r'(\d{1})\s', objStarsID)
+        if objStars:
+            objStars = objStars.group().strip()
 
         objURL = url
 
@@ -231,6 +237,7 @@ for page in range(1, PAGES_TO_VISIT + 1):
         allObjects.loc[rowCounter, 'views'] = objViews
         allObjects.loc[rowCounter, 'likes'] = objLikes
         allObjects.loc[rowCounter, 'description'] = objDescription
+        allObjects.loc[rowCounter, 'stars'] = objStars
         allObjects.loc[rowCounter, 'sold'] = objSold
         allObjects.loc[rowCounter, 'sale_time'] = objSaleTime
         allObjects.loc[rowCounter, 'last_update'] = objLastUpdate
@@ -244,6 +251,7 @@ for page in range(1, PAGES_TO_VISIT + 1):
 
         wait.until(lambda d: d.execute_script("return document.readyState") == "complete")
 
+    break
     nextPage = f'https://www.skelbiu.lt/skelbimai/{page+1}{MAIN_PAGE[33:]}'
     driver.get(nextPage)
     wait.until(lambda d: d.execute_script("return document.readyState") == "complete")
