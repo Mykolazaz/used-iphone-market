@@ -187,7 +187,7 @@ for page in range(1, PAGES_TO_VISIT + 1):
                 objSellerAds = driver.find_element(By.CSS_SELECTOR, 'div.profile-stats').text
                 objSellerAds = re.search(r'\d+', objSellerAds).group()
 
-            objSellerVerified = True if len(driver.find_elements(By.CSS_SELECTOR, 'div.user-verified > span.tooltip')) != 0 else False
+            objSellerVerified = 1 if len(driver.find_elements(By.CSS_SELECTOR, 'div.user-verified > span.tooltip')) != 0 else 0
 
         objLastUpdate = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'div.actions-container > div.block:nth-child(2)'))).text
 
