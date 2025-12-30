@@ -14,11 +14,11 @@ When analysings the dataset, many insights became apparent:
 
 - Listings for iPhone accesories were found to be miscategorized in iPhone category in order to attract more views. Listing quality standarts should be discussed to check if this is a one-time occurance or a platform-wide problem;
 
-- 382 iPhones were found to be overpriced (25% above median). A 'recommended price' feature could be implemented in the listing creation screen for sellers. It would encourage sellers to list iPhones for lower prices. On the buyers' side, an underpriced iPhone would receive a 'great price' icon;
+- 380 iPhones were found to be overpriced (25% above median). A 'recommended price' feature could be implemented in the listing creation screen for sellers. It would encourage sellers to list iPhones for lower prices. On the buyers' side, an underpriced iPhone would receive a 'great price' icon;
 
-- Tests showed that there were statistically significant differences between iPhone 13 prices in the TOP 3 cities for the same model. Before-mentioned 'recommended price' feature could help equalize prices;
+- Tests showed that there were statistically significant differences between iPhone 13 prices in the TOP 3 cities for the same model. Previously mentioned 'recommended price' feature could help equalize prices;
 
 - 231 iPhone listings were missing either a price, a description or a phone condition. A trivial solution is possible: adding suggestive text above the description input field stating that '98% of sold items had a description'. A more complex solution could be implementing a scoring system that assigns points for every filled out field and uploaded photo.
 
 
-AI was used for statistical test code debugging purposes and KPI suggestions.
+AI was used for statistical test code debugging and KPI suggestions.
