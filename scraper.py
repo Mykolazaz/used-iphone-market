@@ -244,6 +244,8 @@ for page in range(1, PAGES_TO_VISIT + 1):
         allObjects.loc[rowCounter, 'registration_date'] = objSellerDate
         allObjects.loc[rowCounter, 'seller_verified'] = objSellerVerified
         allObjects.loc[rowCounter, 'n_listings'] = objSellerAds
+
+        print(f'{objModel} - {objPrice}€')
         
         rowCounter += 1
 
